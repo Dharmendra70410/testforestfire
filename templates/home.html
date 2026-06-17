@@ -1,34 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FWI Prediction Form</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
 <body>
+    <main class="shell">
+        <section class="app-card">
+            <aside class="app-sidebar">
+                <span class="eyebrow">Prediction Console</span>
+                <h1>FWI Prediction</h1>
+                <p>
+                    Enter the meteorological values below to estimate the Fire Weather Index.
+                    The interface is designed to feel cleaner, more modern, and easier to use on mobile.
+                </p>
+                <div class="sidebar-note">
+                    <strong>Tip</strong>
+                    <span>Use numeric values only. Keep inputs consistent with training data.</span>
+                </div>
+            </aside>
 
-    <div class="login">
-        <h1>FWI Prediction</h1>
+            <section class="app-main">
+                <form class="prediction-form" action="{{ url_for('predict_datapoint') }}" method="post">
+                    <div class="form-grid">
+                        <label class="field">
+                            <span>Temperature</span>
+                            <input type="number" step="any" name="Temperature" placeholder="e.g. 29" value="{{ form_data.Temperature if form_data.Temperature else '' }}" required>
+                        </label>
+                        <label class="field">
+                            <span>RH</span>
+                            <input type="number" step="any" name="RH" placeholder="e.g. 56" value="{{ form_data.RH if form_data.RH else '' }}" required>
+                        </label>
+                        <label class="field">
+                            <span>Ws</span>
+                            <input type="number" step="any" name="Ws" placeholder="e.g. 6" value="{{ form_data.Ws if form_data.Ws else '' }}" required>
+                        </label>
+                        <label class="field">
+                            <span>Rain</span>
+                            <input type="number" step="any" name="Rain" placeholder="e.g. 0" value="{{ form_data.Rain if form_data.Rain else '' }}" required>
+                        </label>
+                        <label class="field">
+                            <span>FFMC</span>
+                            <input type="number" step="any" name="FFMC" placeholder="e.g. 85.4" value="{{ form_data.FFMC if form_data.FFMC else '' }}" required>
+                        </label>
+                        <label class="field">
+                            <span>DMC</span>
+                            <input type="number" step="any" name="DMC" placeholder="e.g. 15.2" value="{{ form_data.DMC if form_data.DMC else '' }}" required>
+                        </label>
+                        <label class="field">
+                            <span>ISI</span>
+                            <input type="number" step="any" name="ISI" placeholder="e.g. 4.7" value="{{ form_data.ISI if form_data.ISI else '' }}" required>
+                        </label>
+                        <label class="field">
+                            <span>Classes</span>
+                            <input type="number" step="any" name="Classes" placeholder="e.g. 1" value="{{ form_data.Classes if form_data.Classes else '' }}" required>
+                        </label>
+                        <label class="field field-full">
+                            <span>Region</span>
+                            <input type="number" step="any" name="Region" placeholder="e.g. 1" value="{{ form_data.Region if form_data.Region else '' }}" required>
+                        </label>
+                    </div>
 
-        <!-- Main Input For Receiving Query to our ML -->
-        <form action="{{ url_for('predict_datapoint') }}" method="post">
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-submit">Predict FWI</button>
+                        <button type="button" class="btn btn-secondary btn-reset" onclick="window.location.href='{{ url_for('reset_data') }}'">Reset Data</button>
+                    </div>
+                </form>
 
-            <input type="text" name="Temperature" placeholder="Temperature" required="required" /><br>
-            <input type="text" name="RH" placeholder="RH" required="required" /><br>
-            <input type="text" name="Ws" placeholder="Ws" required="required" /><br>
-            <input type="text" name="Rain" placeholder="Rain" required="required" /><br>
-            <input type="text" name="FFMC" placeholder="FFMC" required="required" /><br>
-            <input type="text" name="DMC" placeholder="DMC" required="required" /><br>
-            <input type="text" name="ISI" placeholder="ISI" required="required" /><br>
-            <input type="text" name="Classes" placeholder="Classes" required="required" /><br>
-            <input type="text" name="Region" placeholder="Region" required="required" /><br>
-
-            <button type="submit" class="btn btn-primary btn-block btn-large">
-                Predict
-            </button>
-
-        </form>
-
-        <h2>
-            THE FWI prediction is {{ results }}
-        </h2>
-
-    </div>
-
+                <div class="result-card {% if results is not none %}has-result{% endif %}">
+                    <span class="result-label">Prediction Result</span>
+                    {% if results is not none %}
+                        <h2>{{ results }}</h2>
+                        <p>Your predicted Fire Weather Index has been generated successfully.</p>
+                    {% else %}
+                        <h2>Waiting for input</h2>
+                        <p>Submit the form to see the predicted FWI value here.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </section>
+    </main>
 </body>
 </html>

@@ -1,6 +1,6 @@
 import pickle
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 
 import numpy as np
 import pandas as pd
@@ -8,10 +8,19 @@ from sklearn.preprocessing import StandardScaler
 
 application =Flask(__name__)
 app=application
+app.secret_key = 'section-29-dev-secret-key'
 
 ##import ridge regressor adn standard scaler pickle
 ridge_model=pickle.load(open('models/ridge.pk1','rb'))
 standard_scaler=pickle.load(open('models/scaler.pk1', 'rb'))
+
+# Prevent caching of pages
+@app.after_request
+def set_cache_headers(response):
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 
 
@@ -32,14 +41,39 @@ def predict_datapoint():
         Classes = float(request.form.get('Classes'))
         Region = float(request.form.get('Region'))
 
-        #don't do fit.transform(data leakaage) do only transform
-        new_data_scaled= standard_scaler.transform([[Temperature, RH, Ws, Rain, FFMC, DMC,ISI, Classes,Region]])
-        result=ridge_model.predict(new_data_scaled)
+        # Store form data to return to template
+        form_data = {
+            'Temperature': Temperature,
+            'RH': RH,
+            'Ws': Ws,
+            'Rain': Rain,
+            'FFMC': FFMC,
+            'DMC': DMC,
+            'ISI': ISI,
+            'Classes': Classes,
+            'Region': Region
+        }
 
-        return render_template('home.html', results=result[0]) #result is in the form of list
-    
-    else:
-        return render_template('home.html')
+        #don't do fit.transform(data leakage) do only transform
+        new_data_scaled= standard_scaler.transform([[Temperature, RH, Ws, Rain, FFMC, DMC, ISI, Classes, Region]])
+        results = ridge_model.predict(new_data_scaled)[0]
+
+        session['form_data'] = form_data
+        session['results'] = results
+
+        return redirect(url_for('predict_datapoint'))
+
+    form_data = session.get('form_data', {})
+    results = session.get('results')
+
+    return render_template('home.html', results=results, form_data=form_data)
+
+
+@app.route('/resetdata')
+def reset_data():
+    session.pop('form_data', None)
+    session.pop('results', None)
+    return redirect(url_for('predict_datapoint'))
 
 if __name__=="__main__":
     app.run(host="0.0.0.0")
